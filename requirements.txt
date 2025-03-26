@@ -124,6 +124,7 @@ fsspec==2025.3.0
 funcy==2.0
 gdrive==0.1.5
 gensim @ file:///Users/builder/cbouss/perseverance-python-buildout/croot/gensim_1699254328067/work
+git-filter-repo==2.47.0
 gitdb==4.0.12
 GitPython==3.1.44
 gmpy2 @ file:///private/var/folders/nz/j6p8yfhx1mv_0grj5xl4650h0000gp/T/abs_51391juwln/croot/gmpy2_1738085477864/work
