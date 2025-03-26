@@ -37,8 +37,17 @@
                     </div>
                     <div class="mb-3">
                         <button type="submit" class="btn btn-primary">
-                            Envoyer le fichier
+                            Envoyer le Dataset
                         </button>
+                        {% with messages = get_flashed_messages() %}
+                            {% if messages %}
+                                <ul>
+                                    {% for message in messages %}
+                                        <li>{{ message }}</li>
+                                    {% endfor %}
+                                </ul>
+                            {% endif %}
+                        {% endwith %}
                     </div>
 
                 </form>
