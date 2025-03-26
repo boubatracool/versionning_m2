@@ -1,0 +1,5 @@
+outs:
+- md5: b06d3962c00fe6a9f20f742eaa576c46
+  size: 49958
+  hash: md5
+  path: titanic_case_study.joblib
