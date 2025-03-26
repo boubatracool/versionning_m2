@@ -30,7 +30,7 @@ sur Windows
 
 #### 1.3. Installation de Flask
 ```
-pip install -r requierments.txt
+pip install -r requirements.txt
 ```
 
 ### 2. Lancement de l'application
