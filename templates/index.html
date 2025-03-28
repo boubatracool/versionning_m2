@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>File Upload Project</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      /* Toast animation */
+      @keyframes slideIn {
+        from {
+          transform: translateY(100%);
+          opacity: 0;
+        }
+        to {
+          transform: translateY(0);
+          opacity: 1;
+        }
+      }
+      @keyframes slideOut {
+        from {
+          transform: translateY(0);
+          opacity: 1;
+        }
+        to {
+          transform: translateY(100%);
+          opacity: 0;
+        }
+      }
+      .toast-enter {
+        animation: slideIn 0.3s ease-out forwards;
+      }
+      .toast-exit {
+        animation: slideOut 0.3s ease-in forwards;
+      }
+
+      /* Loading animation */
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+      .spinner {
+        animation: spin 1s linear infinite;
+      }
+    </style>
+  </head>
+  <body class="bg-gray-100 min-h-screen">
+    <!-- Navigation Bar -->
+    <nav class="bg-blue-700 text-white shadow-md">
+      <div class="max-w-6xl mx-auto px-4">
+        <div class="flex justify-between">
+          <div class="flex space-x-4">
+            <!-- Logo -->
+            <div>
+              <a href="#" class="flex items-center py-4 px-2">
+                <span class="font-semibold text-xl">CSV Uploader</span>
+              </a>
+            </div>
+
+            <!-- Primary Nav -->
+            <div class="hidden md:flex items-center space-x-1">
+              <a
+                href="index.html"
+                class="py-4 px-3 text-white font-semibold border-b-2 border-blue-500"
+                >Upload</a
+              >
+              <a
+                href="files.html"
+                class="py-4 px-3 text-blue-200 font-semibold hover:text-white"
+                >Files</a
+              >
+            </div>
+          </div>
+
+          <!-- Mobile menu button -->
+          <div class="md:hidden flex items-center">
+            <button class="mobile-menu-button focus:outline-none">
+              <svg
+                class="w-6 h-6"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M4 6h16M4 12h16M4 18h16"
+                />
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Mobile menu -->
+      <div class="mobile-menu hidden md:hidden">
+        <a
+          href="index.html"
+          class="block py-2 px-4 text-white bg-blue-600 font-semibold"
+          >Upload</a
+        >
+        <a
+          href="files.html"
+          class="block py-2 px-4 text-blue-200 hover:bg-blue-600 hover:text-white"
+          >Files</a
+        >
+      </div>
+    </nav>
+
+    <div class="p-8">
+      <div
+        class="max-w-3xl mx-auto bg-white rounded-lg shadow-md overflow-hidden"
+      >
+        <!-- Project Header -->
+        <div class="bg-blue-600 text-white p-6">
+          <h1 class="text-3xl font-bold">File Upload System</h1>
+          <div class="mt-2">
+            <p class="text-blue-100">Group Number: 05</p>
+            <div class="mt-1">
+              <p class="text-sm text-blue-100">Group Members:</p>
+              <ul class="list-disc list-inside ml-2 text-sm text-blue-100">
+                <li>John Smith</li>
+                <li>Emily Johnson</li>
+                <li>Michael Brown</li>
+                <li>Sarah Davis</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="p-6">
+          <h2 class="text-xl font-semibold text-gray-800 mb-4">Upload Files</h2>
+
+          <!-- Dropzone -->
+          <div
+            id="dropzone"
+            class="border-2 border-dashed border-blue-400 rounded-lg p-8 text-center cursor-pointer hover:bg-blue-50 transition-colors duration-200"
+          >
+            <input
+              type="file"
+              id="fileInput"
+              class="hidden"
+              accept=".csv"
+              multiple
+            />
+
+            <div class="mb-4">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-12 w-12 mx-auto text-blue-500"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+                />
+              </svg>
+            </div>
+
+            <p class="text-lg font-medium text-blue-600">
+              Drag and drop CSV files here
+            </p>
+            <p class="text-sm text-gray-500 mt-1">or</p>
+            <button
+              type="button"
+              id="browseBtn"
+              class="mt-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              Browse Files
+            </button>
+
+            <p class="text-xs text-gray-500 mt-4">
+              Supported file type: CSV only
+            </p>
+            <p class="text-xs text-gray-500 mt-1">
+              Required structure:
+              PassengerId,Survived,Pclass,Name,Sex,Age,SibSp,Parch,Ticket,Fare,Cabin,Embarked
+            </p>
+          </div>
+
+          <!-- File List -->
+          <div id="fileList" class="mt-6 hidden">
+            <h3 class="text-lg font-medium text-gray-800 mb-2">
+              Selected Files:
+            </h3>
+            <ul id="files" class="space-y-2 text-sm"></ul>
+
+            <!-- Upload Button -->
+            <div class="mt-6">
+              <button
+                id="uploadBtn"
+                class="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500"
+              >
+                Start Upload
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Project Description -->
+        <div class="bg-gray-50 p-6 border-t">
+          <h3 class="text-lg font-medium text-gray-800 mb-2">
+            Project Description
+          </h3>
+          <p class="text-gray-600">
+            This file upload system allows users to upload CSV files with a
+            specific structure. The system validates the file type and structure
+            before allowing upload. Users can remove files from the selection
+            before uploading.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toastContainer" class="fixed bottom-4 right-4 z-50"></div>
+
+    <!-- Loading Overlay -->
+    <div
+      id="loadingOverlay"
+      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden"
+    >
+      <div class="bg-white p-6 rounded-lg shadow-xl flex flex-col items-center">
+        <div
+          class="spinner w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full mb-4"
+        ></div>
+        <p class="text-gray-700 font-medium">Uploading files...</p>
+        <p class="text-gray-500 text-sm mt-2">Please wait</p>
+      </div>
+    </div>
+
+    <script>
+      const dropzone = document.getElementById("dropzone");
+      const fileInput = document.getElementById("fileInput");
+      const browseBtn = document.getElementById("browseBtn");
+      const fileList = document.getElementById("fileList");
+      const files = document.getElementById("files");
+      const uploadBtn = document.getElementById("uploadBtn");
+      const toastContainer = document.getElementById("toastContainer");
+      const loadingOverlay = document.getElementById("loadingOverlay");
+      const mobileMenuButton = document.querySelector(".mobile-menu-button");
+      const mobileMenu = document.querySelector(".mobile-menu");
+
+      // Mobile menu toggle
+      if (mobileMenuButton) {
+        mobileMenuButton.addEventListener("click", () => {
+          mobileMenu.classList.toggle("hidden");
+        });
+      }
+
+      // Expected CSV structure
+      const expectedHeaders =
+        "PassengerId,Survived,Pclass,Name,Sex,Age,SibSp,Parch,Ticket,Fare,Cabin,Embarked";
+
+      // Store valid files
+      let validFiles = [];
+
+      // Open file browser when clicking the browse button or dropzone
+      browseBtn.addEventListener("click", () => fileInput.click());
+      dropzone.addEventListener("click", (e) => {
+        if (e.target !== browseBtn) {
+          fileInput.click();
+        }
+      });
+
+      // Handle drag and drop events
+      ["dragenter", "dragover", "dragleave", "drop"].forEach((eventName) => {
+        dropzone.addEventListener(eventName, preventDefaults, false);
+      });
+
+      function preventDefaults(e) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+
+      ["dragenter", "dragover"].forEach((eventName) => {
+        dropzone.addEventListener(eventName, highlight, false);
+      });
+
+      ["dragleave", "drop"].forEach((eventName) => {
+        dropzone.addEventListener(eventName, unhighlight, false);
+      });
+
+      function highlight() {
+        dropzone.classList.add("bg-blue-50", "border-blue-500");
+      }
+
+      function unhighlight() {
+        dropzone.classList.remove("bg-blue-50", "border-blue-500");
+      }
+
+      // Handle file drop
+      dropzone.addEventListener("drop", handleDrop, false);
+
+      function handleDrop(e) {
+        const dt = e.dataTransfer;
+        const droppedFiles = dt.files;
+
+        // Check if files are CSV
+        for (let i = 0; i < droppedFiles.length; i++) {
+          const file = droppedFiles[i];
+          if (!file.name.endsWith(".csv")) {
+            showToast("Only CSV files are supported", "error");
+            return;
+          }
+        }
+
+        // Process each file
+        Array.from(droppedFiles).forEach(validateAndAddFile);
+      }
+
+      // Handle file selection via input
+      fileInput.addEventListener("change", () => {
+        Array.from(fileInput.files).forEach(validateAndAddFile);
+        fileInput.value = ""; // Reset input to allow selecting the same file again
+      });
+
+      // Validate CSV structure and add to list if valid
+      function validateAndAddFile(file) {
+        if (!file.name.endsWith(".csv")) {
+          showToast("Only CSV files are supported", "error");
+          return;
+        }
+
+        const reader = new FileReader();
+
+        reader.onload = function (e) {
+          const content = e.target.result;
+          const firstLine = content.split("\n")[0].trim();
+
+          if (firstLine === expectedHeaders) {
+            // Valid structure
+            validFiles.push(file);
+            updateFileList();
+          } else {
+            showToast("CSV structure is invalid", "error");
+          }
+        };
+
+        reader.readAsText(file);
+      }
+
+      // Update the file list UI
+      function updateFileList() {
+        if (validFiles.length > 0) {
+          fileList.classList.remove("hidden");
+          files.innerHTML = "";
+
+          validFiles.forEach((file, index) => {
+            const item = document.createElement("li");
+            item.className =
+              "flex items-center justify-between bg-white p-3 rounded border";
+
+            const fileInfo = document.createElement("div");
+            fileInfo.className = "flex items-center";
+
+            // File icon
+            const icon = document.createElement("span");
+            icon.className = "text-green-500 mr-2";
+            icon.innerHTML =
+              '<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clip-rule="evenodd" /></svg>';
+
+            // File name and size
+            const details = document.createElement("div");
+            details.innerHTML = `
+                        <p class="text-sm font-medium text-gray-800">${
+                          file.name
+                        }</p>
+                        <p class="text-xs text-gray-500">${formatFileSize(
+                          file.size
+                        )}</p>
+                    `;
+
+            fileInfo.appendChild(icon);
+            fileInfo.appendChild(details);
+            item.appendChild(fileInfo);
+
+            // Delete button
+            const deleteBtn = document.createElement("button");
+            deleteBtn.className =
+              "text-red-500 hover:text-red-700 focus:outline-none";
+            deleteBtn.innerHTML =
+              '<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>';
+            deleteBtn.addEventListener("click", () => {
+              validFiles.splice(index, 1);
+              updateFileList();
+            });
+
+            item.appendChild(deleteBtn);
+            files.appendChild(item);
+          });
+        } else {
+          fileList.classList.add("hidden");
+        }
+      }
+
+      // Format file size
+      function formatFileSize(bytes) {
+        if (bytes === 0) return "0 Bytes";
+        const k = 1024;
+        const sizes = ["Bytes", "KB", "MB", "GB"];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
+      }
+
+      // Upload button click handler
+      uploadBtn.addEventListener("click", uploadFiles);
+
+      // Upload files to server
+      async function uploadFiles() {
+        if (validFiles.length === 0) {
+          showToast("No files to upload", "error");
+          return;
+        }
+
+        // Show loading overlay
+        loadingOverlay.classList.remove("hidden");
+
+        try {
+          const formData = new FormData();
+
+          // Append all files to the FormData object
+          validFiles.forEach((file) => {
+            formData.append("files", file);
+          });
+
+          // Send the files to the server
+          const response = await fetch("/upload", {
+            method: "POST",
+            body: formData,
+          });
+
+          const result = await response.json();
+
+          if (!response.ok) {
+            throw new Error(result.error || "Upload failed");
+          }
+
+          // Success - redirect to files page
+          window.location.href = "files.html";
+        } catch (error) {
+          // Hide loading overlay
+          loadingOverlay.classList.add("hidden");
+
+          // Show error toast
+          showToast(error.message || "Upload failed", "error");
+        }
+      }
+
+      // Toast notification system
+      function showToast(message, type = "info") {
+        const toast = document.createElement("div");
+        toast.className = `toast-enter mb-2 p-4 rounded-md shadow-lg flex items-center justify-between max-w-xs ${
+          type === "error"
+            ? "bg-red-500 text-white"
+            : type === "success"
+            ? "bg-green-500 text-white"
+            : "bg-blue-500 text-white"
+        }`;
+
+        // Toast content
+        const content = document.createElement("div");
+        content.className = "flex items-center";
+
+        // Icon based on type
+        const icon = document.createElement("span");
+        icon.className = "mr-2";
+        if (type === "error") {
+          icon.innerHTML =
+            '<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" /></svg>';
+        } else if (type === "success") {
+          icon.innerHTML =
+            '<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg>';
+        } else {
+          icon.innerHTML =
+            '<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" /></svg>';
+        }
+
+        content.appendChild(icon);
+        content.appendChild(document.createTextNode(message));
+        toast.appendChild(content);
+
+        // Close button
+        const closeBtn = document.createElement("button");
+        closeBtn.className = "ml-4 text-white focus:outline-none";
+        closeBtn.innerHTML =
+          '<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>';
+        closeBtn.addEventListener("click", () => {
+          toast.classList.remove("toast-enter");
+          toast.classList.add("toast-exit");
+          setTimeout(() => {
+            toastContainer.removeChild(toast);
+          }, 300);
+        });
+        toast.appendChild(closeBtn);
+
+        toastContainer.appendChild(toast);
+
+        // Auto-remove after 5 seconds
+        setTimeout(() => {
+          if (toastContainer.contains(toast)) {
+            toast.classList.remove("toast-enter");
+            toast.classList.add("toast-exit");
+            setTimeout(() => {
+              if (toastContainer.contains(toast)) {
+                toastContainer.removeChild(toast);
+              }
+            }, 300);
+          }
+        }, 5000);
+      }
+    </script>
+  </body>
+</html>
