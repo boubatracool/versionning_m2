@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>File Upload Project</title>
+    <title>File Upload & Model Training Project</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
       /* Toast animation */
@@ -55,23 +55,18 @@
         <div class="flex justify-between">
           <div class="flex space-x-4">
             <!-- Logo -->
-            <div>
-              <a href="#" class="flex items-center py-4 px-2">
-                <span class="font-semibold text-xl">CSV Uploader</span>
-              </a>
-            </div>
 
             <!-- Primary Nav -->
             <div class="hidden md:flex items-center space-x-1">
               <a
-                href="index.html"
+                href="{{ url_for('index') }}"
                 class="py-4 px-3 text-white font-semibold border-b-2 border-blue-500"
-                >Upload</a
+                >Télécharger</a
               >
               <a
-                href="files.html"
+                href="{{ url_for('files') }}"
                 class="py-4 px-3 text-blue-200 font-semibold hover:text-white"
-                >Files</a
+                >Fichiers</a
               >
             </div>
           </div>
@@ -101,14 +96,14 @@
       <!-- Mobile menu -->
       <div class="mobile-menu hidden md:hidden">
         <a
-          href="index.html"
+          href="{{ url_for('index') }}"
           class="block py-2 px-4 text-white bg-blue-600 font-semibold"
-          >Upload</a
+          >Télécharger</a
         >
         <a
-          href="files.html"
+          href="{{ url_for('files') }}"
           class="block py-2 px-4 text-blue-200 hover:bg-blue-600 hover:text-white"
-          >Files</a
+          >Fichiers</a
         >
       </div>
     </nav>
@@ -119,16 +114,20 @@
       >
         <!-- Project Header -->
         <div class="bg-blue-600 text-white p-6">
-          <h1 class="text-3xl font-bold">File Upload System</h1>
+          <h1 class="text-2xl font-bold">
+            Développement et Versioning d'une Application Web Python avec
+            Gestion des Données de Machine Learning
+          </h1>
           <div class="mt-2">
-            <p class="text-blue-100">Group Number: 05</p>
+            <p class="text-blue-100 text-lg font-semibold">Groupe 02</p>
             <div class="mt-1">
-              <p class="text-sm text-blue-100">Group Members:</p>
+              <p class="text-sm text-blue-100">Membres du Groupe:</p>
               <ul class="list-disc list-inside ml-2 text-sm text-blue-100">
-                <li>John Smith</li>
-                <li>Emily Johnson</li>
-                <li>Michael Brown</li>
-                <li>Sarah Davis</li>
+                <li>Boubacar TRAORE (Scrum Master)</li>
+                <li>Mariéta SOW</li>
+                <li>Ikbal AZIMARI TOURE</li>
+                <li>KAMDEM Adonis Ghislin WAFFO</li>
+                <li>Digali Blandine HINFENE</li>
               </ul>
             </div>
           </div>
@@ -169,7 +168,7 @@
             </div>
 
             <p class="text-lg font-medium text-blue-600">
-              Drag and drop CSV files here
+              Glissez-déposez les fichiers CSV ici
             </p>
             <p class="text-sm text-gray-500 mt-1">or</p>
             <button
@@ -177,22 +176,18 @@
               id="browseBtn"
               class="mt-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
-              Browse Files
+              Parcourir les fichiers
             </button>
 
             <p class="text-xs text-gray-500 mt-4">
-              Supported file type: CSV only
-            </p>
-            <p class="text-xs text-gray-500 mt-1">
-              Required structure:
-              PassengerId,Survived,Pclass,Name,Sex,Age,SibSp,Parch,Ticket,Fare,Cabin,Embarked
+              Type de fichier pris en charge : CSV uniquement
             </p>
           </div>
 
           <!-- File List -->
           <div id="fileList" class="mt-6 hidden">
             <h3 class="text-lg font-medium text-gray-800 mb-2">
-              Selected Files:
+              Fichier(s) sélectionné(s) :
             </h3>
             <ul id="files" class="space-y-2 text-sm"></ul>
 
@@ -202,7 +197,7 @@
                 id="uploadBtn"
                 class="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500"
               >
-                Start Upload
+                Démarrer le téléchargement
               </button>
             </div>
           </div>
@@ -210,14 +205,12 @@
 
         <!-- Project Description -->
         <div class="bg-gray-50 p-6 border-t">
-          <h3 class="text-lg font-medium text-gray-800 mb-2">
-            Project Description
-          </h3>
+          <h3 class="text-lg font-medium text-gray-800 mb-2">Description</h3>
           <p class="text-gray-600">
-            This file upload system allows users to upload CSV files with a
-            specific structure. The system validates the file type and structure
-            before allowing upload. Users can remove files from the selection
-            before uploading.
+            Une application web de gestion de données de Machine Learning qui
+            offre une interface utilisateur permettant aux utilisateurs
+            d'uploader des données, d'entraîner un modèle de machine learning et
+            de visualiser les résultats de l'entraînement.
           </p>
         </div>
       </div>
@@ -235,8 +228,8 @@
         <div
           class="spinner w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full mb-4"
         ></div>
-        <p class="text-gray-700 font-medium">Uploading files...</p>
-        <p class="text-gray-500 text-sm mt-2">Please wait</p>
+        <p class="text-gray-700 font-medium">Chargement des fichiers...</p>
+        <p class="text-gray-500 text-sm mt-2">Veuillez patienter</p>
       </div>
     </div>
 
@@ -311,7 +304,7 @@
         for (let i = 0; i < droppedFiles.length; i++) {
           const file = droppedFiles[i];
           if (!file.name.endsWith(".csv")) {
-            showToast("Only CSV files are supported", "error");
+            showToast("Seuls les fichiers CSV sont pris en charge", "error");
             return;
           }
         }
@@ -329,7 +322,7 @@
       // Validate CSV structure and add to list if valid
       function validateAndAddFile(file) {
         if (!file.name.endsWith(".csv")) {
-          showToast("Only CSV files are supported", "error");
+          showToast("Seuls les fichiers CSV sont pris en charge", "error");
           return;
         }
 
@@ -344,7 +337,7 @@
             validFiles.push(file);
             updateFileList();
           } else {
-            showToast("CSV structure is invalid", "error");
+            showToast("La structure CSV n'est pas valide", "error");
           }
         };
 
@@ -420,7 +413,7 @@
       // Upload files to server
       async function uploadFiles() {
         if (validFiles.length === 0) {
-          showToast("No files to upload", "error");
+          showToast("Aucun fichier à télécharger", "error");
           return;
         }
 
@@ -444,17 +437,17 @@
           const result = await response.json();
 
           if (!response.ok) {
-            throw new Error(result.error || "Upload failed");
+            throw new Error(result.error || "Erreur lors du téléchargement");
           }
 
           // Success - redirect to files page
-          window.location.href = "files.html";
+          window.location.href = "{{ url_for('files') }}";
         } catch (error) {
           // Hide loading overlay
           loadingOverlay.classList.add("hidden");
 
           // Show error toast
-          showToast(error.message || "Upload failed", "error");
+          showToast(error.message || "Erreur lors du téléchargement", "error");
         }
       }
 

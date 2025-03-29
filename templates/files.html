@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Files - CSV Uploader</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      /* Toast animation */
+      @keyframes slideIn {
+        from {
+          transform: translateY(100%);
+          opacity: 0;
+        }
+        to {
+          transform: translateY(0);
+          opacity: 1;
+        }
+      }
+      @keyframes slideOut {
+        from {
+          transform: translateY(0);
+          opacity: 1;
+        }
+        to {
+          transform: translateY(100%);
+          opacity: 0;
+        }
+      }
+      .toast-enter {
+        animation: slideIn 0.3s ease-out forwards;
+      }
+      .toast-exit {
+        animation: slideOut 0.3s ease-in forwards;
+      }
+
+      /* Loading animation */
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+      .spinner {
+        animation: spin 1s linear infinite;
+      }
+
+      /* Modal animation */
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 1;
+        }
+      }
+      @keyframes scaleIn {
+        from {
+          transform: scale(0.95);
+          opacity: 0;
+        }
+        to {
+          transform: scale(1);
+          opacity: 1;
+        }
+      }
+      .modal-overlay {
+        animation: fadeIn 0.3s ease-out forwards;
+      }
+      .modal-container {
+        animation: scaleIn 0.3s ease-out forwards;
+      }
+
+      /* Progress bar animation */
+      @keyframes progress {
+        from {
+          width: 0%;
+        }
+        to {
+          width: 100%;
+        }
+      }
+      .progress-animate {
+        animation: progress 30s linear forwards;
+      }
+    </style>
+  </head>
+  <body class="bg-gray-100 min-h-screen">
+    <!-- Navigation Bar -->
+    <nav class="bg-blue-700 text-white shadow-md">
+      <div class="max-w-6xl mx-auto px-4">
+        <div class="flex justify-between">
+          <div class="flex space-x-4">
+            <!-- Logo -->
+            <div>
+              <a href="/" class="flex items-center py-4 px-2">
+                <span class="font-semibold text-xl">CSV Uploader</span>
+              </a>
+            </div>
+
+            <!-- Primary Nav -->
+            <div class="hidden md:flex items-center space-x-1">
+              <a
+                href="/"
+                class="py-4 px-3 text-blue-200 font-semibold hover:text-white"
+                >Upload</a
+              >
+              <a
+                href="/files"
+                class="py-4 px-3 text-white font-semibold border-b-2 border-blue-500"
+                >Files</a
+              >
+            </div>
+          </div>
+
+          <!-- Mobile menu button -->
+          <div class="md:hidden flex items-center">
+            <button class="mobile-menu-button focus:outline-none">
+              <svg
+                class="w-6 h-6"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M4 6h16M4 12h16M4 18h16"
+                />
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Mobile menu -->
+      <div class="mobile-menu hidden md:hidden">
+        <a
+          href="/"
+          class="block py-2 px-4 text-blue-200 hover:bg-blue-600 hover:text-white"
+          >Upload</a
+        >
+        <a
+          href="/files"
+          class="block py-2 px-4 text-white bg-blue-600 font-semibold"
+          >Files</a
+        >
+      </div>
+    </nav>
+
+    <div class="p-8">
+      <div
+        class="max-w-6xl mx-auto bg-white rounded-lg shadow-md overflow-hidden"
+      >
+        <div class="p-6">
+          <h1 class="text-2xl font-bold text-gray-800 mb-6">Uploaded Files</h1>
+
+          <div id="filesList" class="space-y-4">
+            <!-- Files will be loaded here -->
+            <div class="text-center py-8 text-gray-500">
+              <p>Loading files...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toastContainer" class="fixed bottom-4 right-4 z-50"></div>
+
+    <!-- Train Model Modal -->
+    <div
+      id="trainModelModal"
+      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden modal-overlay"
+    >
+      <div
+        class="bg-white rounded-lg shadow-xl w-full max-w-md mx-4 modal-container"
+      >
+        <!-- Modal Header -->
+        <div
+          class="bg-purple-600 text-white px-6 py-4 rounded-t-lg flex justify-between items-center"
+        >
+          <h3 class="text-lg font-medium">Train Machine Learning Model</h3>
+          <button id="closeModalBtn" class="text-white focus:outline-none">
+            <svg
+              class="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M6 18L18 6M6 6l12 12"
+              ></path>
+            </svg>
+          </button>
+        </div>
+
+        <!-- Modal Content -->
+        <div class="p-6">
+          <!-- File Information -->
+          <div class="mb-4 pb-4 border-b border-gray-200">
+            <p class="text-sm text-gray-500">Selected File:</p>
+            <p id="selectedFileName" class="font-medium text-gray-800"></p>
+          </div>
+
+          <!-- Model Selection -->
+          <div id="modelSelectionSection">
+            <label
+              for="modelSelect"
+              class="block text-sm font-medium text-gray-700 mb-2"
+              >Select a model to train:</label
+            >
+            <select
+              id="modelSelect"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
+            >
+              <option value="">-- Select a model --</option>
+              <option value="linear_regression">Linear Regression</option>
+              <option value="random_forest">Random Forest</option>
+              <option value="svm">Support Vector Machine</option>
+              <option value="decision_tree">Decision Tree</option>
+              <option value="knn">K-Nearest Neighbors</option>
+            </select>
+
+            <div class="mt-6">
+              <button
+                id="startTrainingBtn"
+                class="w-full px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 disabled:bg-purple-300 disabled:cursor-not-allowed"
+                disabled
+              >
+                Start Training
+              </button>
+            </div>
+          </div>
+
+          <!-- Training Progress -->
+          <div id="trainingProgressSection" class="hidden">
+            <p class="text-gray-700 font-medium mb-2">
+              Training in progress...
+            </p>
+            <div class="w-full bg-gray-200 rounded-full h-2.5 mb-4">
+              <div
+                id="progressBar"
+                class="bg-purple-600 h-2.5 rounded-full progress-animate"
+                style="width: 0%"
+              ></div>
+            </div>
+            <p id="progressText" class="text-sm text-gray-500">
+              Initializing training...
+            </p>
+          </div>
+
+          <!-- Training Results -->
+          <div id="trainingResultsSection" class="hidden">
+            <div class="flex items-center mb-4">
+              <svg
+                class="w-6 h-6 text-green-500 mr-2"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M5 13l4 4L19 7"
+                ></path>
+              </svg>
+              <h4 class="text-lg font-medium text-gray-800">
+                Training Complete
+              </h4>
+            </div>
+
+            <div class="bg-gray-50 p-4 rounded-md">
+              <h5 class="font-medium text-gray-700 mb-2">Model Performance:</h5>
+              <div id="modelResults" class="space-y-2">
+                <!-- Results will be populated dynamically -->
+              </div>
+            </div>
+
+            <div class="mt-6">
+              <button
+                id="newTrainingBtn"
+                class="w-full px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500"
+              >
+                Train Another Model
+              </button>
+            </div>
+          </div>
+
+          <!-- Training Error -->
+          <div id="trainingErrorSection" class="hidden">
+            <div class="flex items-center mb-4">
+              <svg
+                class="w-6 h-6 text-red-500 mr-2"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                ></path>
+              </svg>
+              <h4 class="text-lg font-medium text-gray-800">Training Failed</h4>
+            </div>
+
+            <div class="bg-red-50 p-4 rounded-md">
+              <h5 class="font-medium text-red-700 mb-2">Error:</h5>
+              <p id="errorMessage" class="text-red-600">
+                An unexpected error occurred during training.
+              </p>
+            </div>
+
+            <div class="mt-6">
+              <button
+                id="tryAgainBtn"
+                class="w-full px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500"
+              >
+                Try Again
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // Mobile menu toggle
+      const mobileMenuButton = document.querySelector(".mobile-menu-button");
+      const mobileMenu = document.querySelector(".mobile-menu");
+
+      if (mobileMenuButton) {
+        mobileMenuButton.addEventListener("click", () => {
+          mobileMenu.classList.toggle("hidden");
+        });
+      }
+
+      // Toast notification system
+      const toastContainer = document.getElementById("toastContainer");
+
+      function showToast(message, type = "info") {
+        const toast = document.createElement("div");
+        toast.className = `toast-enter mb-2 p-4 rounded-md shadow-lg flex items-center justify-between max-w-xs ${
+          type === "error"
+            ? "bg-red-500 text-white"
+            : type === "success"
+            ? "bg-green-500 text-white"
+            : "bg-blue-500 text-white"
+        }`;
+
+        // Toast content
+        const content = document.createElement("div");
+        content.className = "flex items-center";
+
+        // Icon based on type
+        const icon = document.createElement("span");
+        icon.className = "mr-2";
+        if (type === "error") {
+          icon.innerHTML =
+            '<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" /></svg>';
+        } else if (type === "success") {
+          icon.innerHTML =
+            '<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg>';
+        } else {
+          icon.innerHTML =
+            '<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" /></svg>';
+        }
+
+        content.appendChild(icon);
+        content.appendChild(document.createTextNode(message));
+        toast.appendChild(content);
+
+        // Close button
+        const closeBtn = document.createElement("button");
+        closeBtn.className = "ml-4 text-white focus:outline-none";
+        closeBtn.innerHTML =
+          '<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>';
+        closeBtn.addEventListener("click", () => {
+          toast.classList.remove("toast-enter");
+          toast.classList.add("toast-exit");
+          setTimeout(() => {
+            toastContainer.removeChild(toast);
+          }, 300);
+        });
+        toast.appendChild(closeBtn);
+
+        toastContainer.appendChild(toast);
+
+        // Auto-remove after 5 seconds
+        setTimeout(() => {
+          if (toastContainer.contains(toast)) {
+            toast.classList.remove("toast-enter");
+            toast.classList.add("toast-exit");
+            setTimeout(() => {
+              if (toastContainer.contains(toast)) {
+                toastContainer.removeChild(toast);
+              }
+            }, 300);
+          }
+        }, 5000);
+      }
+
+      // Train Model Modal Elements
+      const trainModelModal = document.getElementById("trainModelModal");
+      const closeModalBtn = document.getElementById("closeModalBtn");
+      const selectedFileName = document.getElementById("selectedFileName");
+      const modelSelect = document.getElementById("modelSelect");
+      const startTrainingBtn = document.getElementById("startTrainingBtn");
+      const modelSelectionSection = document.getElementById(
+        "modelSelectionSection"
+      );
+      const trainingProgressSection = document.getElementById(
+        "trainingProgressSection"
+      );
+      const trainingResultsSection = document.getElementById(
+        "trainingResultsSection"
+      );
+      const trainingErrorSection = document.getElementById(
+        "trainingErrorSection"
+      );
+      const progressBar = document.getElementById("progressBar");
+      const progressText = document.getElementById("progressText");
+      const modelResults = document.getElementById("modelResults");
+      const errorMessage = document.getElementById("errorMessage");
+      const newTrainingBtn = document.getElementById("newTrainingBtn");
+      const tryAgainBtn = document.getElementById("tryAgainBtn");
+
+      // Current selected file for training
+      let currentFile = "";
+
+      // Close modal when close button is clicked
+      closeModalBtn.addEventListener("click", () => {
+        trainModelModal.classList.add("hidden");
+      });
+
+      // Close modal when clicking outside
+      trainModelModal.addEventListener("click", (e) => {
+        if (e.target === trainModelModal) {
+          trainModelModal.classList.add("hidden");
+        }
+      });
+
+      // Enable/disable Start Training button based on model selection
+      modelSelect.addEventListener("change", () => {
+        startTrainingBtn.disabled = !modelSelect.value;
+      });
+
+      // Open train model modal
+      function openTrainModelModal(filename) {
+        // Reset modal state
+        resetModalState();
+
+        // Set selected file
+        currentFile = filename;
+        selectedFileName.textContent = filename;
+
+        // Show modal
+        trainModelModal.classList.remove("hidden");
+      }
+
+      // Start training when button is clicked
+      startTrainingBtn.addEventListener("click", startTraining);
+
+      async function startTraining() {
+        // Show progress section
+        modelSelectionSection.classList.add("hidden");
+        trainingProgressSection.classList.remove("hidden");
+
+        // Reset progress bar
+        progressBar.style.width = "0%";
+        progressBar.classList.add("progress-animate");
+
+        // Update progress text
+        progressText.textContent = "Initializing training...";
+
+        try {
+          // Start the training process
+          const response = await fetch("/api/train", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              model: modelSelect.value,
+              file: currentFile,
+            }),
+          });
+
+          if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || "Training failed");
+          }
+
+          const result = await response.json();
+
+          // Update progress text during training
+          let checkStatusInterval = setInterval(async () => {
+            const statusResponse = await fetch(
+              `/api/train/status/${result.job_id}`
+            );
+            const statusData = await statusResponse.json();
+
+            if (statusData.status === "completed") {
+              clearInterval(checkStatusInterval);
+              showTrainingResults(statusData.results);
+            } else if (statusData.status === "failed") {
+              clearInterval(checkStatusInterval);
+              showTrainingError(statusData.error);
+            } else {
+              // Update progress
+              progressText.textContent =
+                statusData.message || "Training in progress...";
+              if (statusData.progress) {
+                progressBar.style.width = `${statusData.progress}%`;
+              }
+            }
+          }, 1000);
+        } catch (error) {
+          showTrainingError(error.message);
+        }
+      }
+
+      // Show training results
+      function showTrainingResults(results) {
+        // Hide progress section
+        trainingProgressSection.classList.add("hidden");
+
+        // Populate results
+        modelResults.innerHTML = "";
+
+        // Add metrics
+        if (results.metrics) {
+          Object.entries(results.metrics).forEach(([key, value]) => {
+            const metricItem = document.createElement("div");
+            metricItem.className = "flex justify-between";
+            metricItem.innerHTML = `
+                    <span class="text-gray-600">${formatMetricName(key)}:</span>
+                    <span class="font-medium">${
+                      typeof value === "number" ? value.toFixed(4) : value
+                    }</span>
+                `;
+            modelResults.appendChild(metricItem);
+          });
+        }
+
+        // Add feature importance if available
+        if (results.feature_importance) {
+          const featureTitle = document.createElement("h6");
+          featureTitle.className = "font-medium text-gray-700 mt-4 mb-2";
+          featureTitle.textContent = "Feature Importance:";
+          modelResults.appendChild(featureTitle);
+
+          const featureList = document.createElement("ul");
+          featureList.className = "text-sm space-y-1";
+
+          Object.entries(results.feature_importance)
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 5) // Top 5 features
+            .forEach(([feature, importance]) => {
+              const featureItem = document.createElement("li");
+              featureItem.className = "flex justify-between";
+              featureItem.innerHTML = `
+                        <span class="text-gray-600">${feature}:</span>
+                        <span class="font-medium">${importance.toFixed(
+                          4
+                        )}</span>
+                    `;
+              featureList.appendChild(featureItem);
+            });
+
+          modelResults.appendChild(featureList);
+        }
+
+        // Show results section
+        trainingResultsSection.classList.remove("hidden");
+      }
+
+      // Format metric name for display
+      function formatMetricName(name) {
+        return name.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase());
+      }
+
+      // Show training error
+      function showTrainingError(error) {
+        // Hide progress section
+        trainingProgressSection.classList.add("hidden");
+
+        // Set error message
+        errorMessage.textContent =
+          error || "An unexpected error occurred during training.";
+
+        // Show error section
+        trainingErrorSection.classList.remove("hidden");
+      }
+
+      // Reset modal state
+      function resetModalState() {
+        // Reset dropdown
+        modelSelect.value = "";
+
+        // Disable start button
+        startTrainingBtn.disabled = true;
+
+        // Show model selection section
+        modelSelectionSection.classList.remove("hidden");
+        trainingProgressSection.classList.add("hidden");
+        trainingResultsSection.classList.add("hidden");
+        trainingErrorSection.classList.add("hidden");
+
+        // Reset progress bar
+        progressBar.style.width = "0%";
+        progressBar.classList.remove("progress-animate");
+      }
+
+      // New training button click handler
+      newTrainingBtn.addEventListener("click", () => {
+        resetModalState();
+      });
+
+      // Try again button click handler
+      tryAgainBtn.addEventListener("click", () => {
+        resetModalState();
+      });
+
+      // In a real application, you would fetch the list of files from the server
+      document.addEventListener("DOMContentLoaded", async () => {
+        const filesList = document.getElementById("filesList");
+
+        try {
+          // Fetch the list of files from the server
+          const response = await fetch("/api/files");
+
+          if (!response.ok) {
+            throw new Error("Failed to fetch files");
+          }
+
+          const data = await response.json();
+
+          if (data.files && data.files.length > 0) {
+            // Render the files
+            filesList.innerHTML = `
+                    <div class="bg-green-50 border border-green-200 rounded-md p-4 mb-4">
+                        <p class="text-green-700 font-medium">Files available for processing</p>
+                        <p class="text-green-600 text-sm mt-1">Select a file to train a machine learning model.</p>
+                    </div>
+                    
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full bg-white">
+                            <thead class="bg-gray-100">
+                                <tr>
+                                    <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Filename</th>
+                                    <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Upload Date</th>
+                                    <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Size</th>
+                                    <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-200">
+                                ${data.files
+                                  .map(
+                                    (file) => `
+                                    <tr>
+                                        <td class="py-4 px-4 text-sm font-medium text-gray-900">${
+                                          file.name
+                                        }</td>
+                                        <td class="py-4 px-4 text-sm text-gray-500">${new Date(
+                                          file.date
+                                        ).toLocaleDateString()}</td>
+                                        <td class="py-4 px-4 text-sm text-gray-500">${formatFileSize(
+                                          file.size
+                                        )}</td>
+                                        <td class="py-4 px-4 text-sm">
+                                            <button class="text-blue-600 hover:text-blue-800 mr-2" onclick="viewFile('${
+                                              file.name
+                                            }')">View</button>
+                                            <button class="text-purple-600 hover:text-purple-800 mr-2" onclick="openTrainModelModal('${
+                                              file.name
+                                            }')">Train Model</button>
+                                            <button class="text-red-600 hover:text-red-800" onclick="deleteFile('${
+                                              file.name
+                                            }')">Delete</button>
+                                        </td>
+                                    </tr>
+                                `
+                                  )
+                                  .join("")}
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+          } else {
+            // No files found
+            filesList.innerHTML = `
+                    <div class="text-center py-8">
+                        <p class="text-gray-500">No files have been uploaded yet.</p>
+                        <a href="/" class="mt-4 inline-block px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Upload Files</a>
+                    </div>
+                `;
+          }
+        } catch (error) {
+          // Error fetching files
+          filesList.innerHTML = `
+                <div class="bg-red-50 border border-red-200 rounded-md p-4">
+                    <p class="text-red-700 font-medium">Error loading files</p>
+                    <p class="text-red-600 text-sm mt-1">${error.message}</p>
+                </div>
+            `;
+        }
+      });
+
+      // Format file size
+      function formatFileSize(bytes) {
+        if (bytes === 0) return "0 Bytes";
+        const k = 1024;
+        const sizes = ["Bytes", "KB", "MB", "GB"];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
+      }
+
+      // View file function
+      function viewFile(filename) {
+        window.location.href = `/view/${filename}`;
+      }
+
+      // Delete file function
+      async function deleteFile(filename) {
+        if (confirm(`Are you sure you want to delete ${filename}?`)) {
+          try {
+            const response = await fetch(`/api/delete/${filename}`, {
+              method: "DELETE",
+            });
+
+            if (!response.ok) {
+              throw new Error("Failed to delete file");
+            }
+
+            // Reload the page to refresh the file list
+            window.location.reload();
+          } catch (error) {
+            showToast(`Error: ${error.message}`, "error");
+          }
+        }
+      }
+    </script>
+  </body>
+</html>
