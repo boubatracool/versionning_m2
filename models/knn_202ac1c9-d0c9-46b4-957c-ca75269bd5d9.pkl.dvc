@@ -1,0 +1,5 @@
+outs:
+- md5: 1bb4a70dc228ff358ba9180569bf22cb
+  size: 57022
+  hash: md5
+  path: knn_202ac1c9-d0c9-46b4-957c-ca75269bd5d9.pkl
