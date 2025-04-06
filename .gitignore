@@ -87,6 +87,7 @@ ipython_config.py
 #   intended to run in multiple environments; otherwise, check them in:
 # .python-version
 
+temp_auto_push.bat
 # pipenv
 #   According to pypa/pipenv#598, it is recommended to include Pipfile.lock in version control.
 #   However, in case of collaboration, if having platform-specific dependencies or dependencies
@@ -128,7 +129,6 @@ celerybeat.pid
 *.sage.py
 
 # Environments
-.env
 .venv
 env/
 venv/
@@ -177,3 +177,6 @@ cython_debug/
 .DS_Store
 *.pkl
 *.joblib
+branch_structure.json
+config.bat
+node_modules

@@ -74,7 +74,6 @@ def get_files():
 
 @app.route('/view/<filename>')
 def view_file(filename):
-    # This is a simple implementation - in a real app, you might want to render the CSV contents
     return send_from_directory(UPLOAD_FOLDER, filename, as_attachment=True)
 
 @app.route('/api/delete/<filename>', methods=['DELETE'])
