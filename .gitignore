@@ -178,3 +178,8 @@ cython_debug/
 *.joblib
 config.bat
 node_modules
+
+# environment variables
+.env
+.env.local
+.env.production
